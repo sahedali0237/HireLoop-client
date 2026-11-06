@@ -28,6 +28,10 @@ export default function RootLayout({
         geist.variable
       )}
     >
+      <head>
+        <title>HireLoop</title>
+        <link rel="icon" href="/logos/Icon.png" />
+      </head>
       <body>
         <ThemeProvider>
           <Navbar />

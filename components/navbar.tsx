@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Sun, Moon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useTheme } from "next-themes"
 import Image from "next/image"
 
 const navLinks = [
@@ -18,6 +19,11 @@ export function Navbar() {
 
   const toggle = useCallback(() => setIsOpen((prev) => !prev), [])
   const close = useCallback(() => setIsOpen(false), [])
+
+  const { setTheme, resolvedTheme } = useTheme()
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+  }
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -71,6 +77,22 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             <Button size="sm" className="px-4">
               Get Started
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={toggleTheme}
+              aria-label={
+                resolvedTheme === "dark"
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+              }
+            >
+              {resolvedTheme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
