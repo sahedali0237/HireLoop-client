@@ -1,22 +1,13 @@
-import { Navbar } from "@/components/navbar"
-import { Button } from "@/components/ui/button"
-
+import HeroSection from "@/components/hero-section"
+import GlobeSection from "@/components/globe-section"
+import StatsSection from "@/components/stats-section"
 export default function Page() {
   return (
     <div className="flex min-h-svh flex-col">
-      <Navbar />
-      <main className="flex-1 p-6">
-        <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-          <div>
-            <h1 className="font-medium">Project ready!</h1>
-            <p>You may now add components and start building.</p>
-            <p>We&apos;ve already added the button component for you.</p>
-            <Button className="mt-2">Button</Button>
-          </div>
-          <div className="font-mono text-xs text-muted-foreground">
-            (Press <kbd>d</kbd> to toggle dark mode)
-          </div>
-        </div>
+      <main className="relative flex min-h-screen w-full flex-col items-center overflow-hidden bg-black pt-20 pb-12 font-sans selection:bg-indigo-500/30">
+        <HeroSection />
+        <GlobeSection />
+        <StatsSection />
       </main>
     </div>
   )
