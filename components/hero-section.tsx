@@ -33,7 +33,7 @@ export default function HeroSection() {
         </div>
 
         {/* Divider */}
-        <div className="hidden h-8 w-[1px] bg-white/10 md:block" />
+        <div className="hidden h-8 w-px bg-white/10 md:block" />
 
         {/* Location Input */}
         <div className="flex w-full flex-1 items-center gap-3 px-4 py-2">

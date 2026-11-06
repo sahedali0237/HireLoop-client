@@ -42,7 +42,9 @@ export function Navbar() {
             alt="HireLoop"
             width={180}
             height={40}
+            loading="eager"
             className="h-10 w-auto drop-shadow-md"
+            style={{ width: "auto", height: "auto" }}
           />
         </Link>
 
@@ -60,7 +62,7 @@ export function Navbar() {
             ))}
             <span className="h-4 w-px bg-border" />
             <Link
-              href="/sign-in"
+              href="/signIn"
               className="text-primary transition-colors hover:text-primary/80"
             >
               Sign In
@@ -119,7 +121,7 @@ export function Navbar() {
                 </Link>
               ))}
               <Link
-                href="/sign-in"
+                href="/signIn"
                 onClick={close}
                 className="block text-primary transition-colors hover:text-primary/80"
               >
@@ -127,7 +129,9 @@ export function Navbar() {
               </Link>
             </div>
             <div className="pt-4">
-              <Button className="w-full px-6 py-3">Get Started</Button>
+              <Link href="/signUp" className="w-full px-6 py-3">
+                Get Started
+              </Link>
             </div>
           </div>
         </div>
