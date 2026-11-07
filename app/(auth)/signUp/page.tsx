@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   FiBriefcase,
   FiArrowRight,
@@ -11,16 +12,45 @@ import {
   FiEyeOff,
   FiUser,
   FiImage,
+  FiSearch,
+  FiShield,
 } from "react-icons/fi"
 import { FcGoogle } from "react-icons/fc"
 import { FaGithub } from "react-icons/fa"
+import { authClient } from "@/lib/auth-client"
+import { getAuthErrorMessage } from "@/lib/auth-errors"
+
+const roleOptions = [
+  {
+    value: "seeker",
+    label: "Seeker",
+    description: "Find your next role",
+    icon: FiSearch,
+  },
+  {
+    value: "recruiter",
+    label: "Recruiter",
+    description: "Hire great talent",
+    icon: FiBriefcase,
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    description: "Manage the platform",
+    icon: FiShield,
+  },
+] as const
+
+type RoleValue = (typeof roleOptions)[number]["value"]
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [role, setRole] = useState<RoleValue>("seeker")
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -37,15 +67,49 @@ export default function SignUpPage() {
     }
 
     setIsLoading(true)
-    // Add your better-auth signUp logic here:
-    // await authClient.signUp.email({ email, password, name, image: imageUrl })
-    setTimeout(() => setIsLoading(false), 1000)
+
+    try {
+      const payload = {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        role,
+        ...(imageUrl.trim() ? { image: imageUrl.trim() } : {}),
+      }
+      const { data, error } = await authClient.signUp.email(payload)
+
+      if (error) {
+        setError(getAuthErrorMessage(error.code, error.message))
+        return
+      }
+
+      if (data) {
+        router.push("/")
+        router.refresh()
+      }
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleOAuthSignIn = (provider: "google" | "github") => {
-    console.log(`Signing up with ${provider}`)
-    // Add your better-auth OAuth logic here
+  const handleOAuthSignIn = async (provider: "google" | "github") => {
+    setError("")
+    setIsLoading(true)
+
+    try {
+      const { error } = await authClient.signIn.social({ provider })
+
+      if (error) {
+        setError(getAuthErrorMessage(error.code, error.message))
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
+
+  const selectedRole = roleOptions.find((option) => option.value === role)
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 p-4 font-sans dark:bg-[#050505]">
@@ -73,6 +137,45 @@ export default function SignUpPage() {
             {error}
           </div>
         )}
+
+        {/* Role Selection */}
+        <div className="mb-6 space-y-1.5">
+          <label className="ml-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+            I am joining as
+          </label>
+          <div
+            className="grid grid-cols-3 gap-2"
+            role="radiogroup"
+            aria-label="Account role"
+          >
+            {roleOptions.map((option) => {
+              const Icon = option.icon
+              const isSelected = role === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setRole(option.value)}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4a35ea]/50 ${
+                    isSelected
+                      ? "border-[#4a35ea] bg-[#4a35ea]/5 text-[#4a35ea] shadow-sm dark:bg-[#4a35ea]/15"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:bg-[#141417] dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <Icon
+                    className={`h-5 w-5 ${isSelected ? "text-[#4a35ea]" : ""}`}
+                  />
+                  <span className="text-xs font-medium">{option.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <p className="ml-1 text-xs text-gray-400 dark:text-gray-500">
+            {selectedRole?.description}
+          </p>
+        </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -139,6 +242,7 @@ export default function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create password"
                   required
+                  minLength={8}
                   className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pr-10 pl-10 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-[#4a35ea]/50 focus:ring-1 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-[#141417] dark:text-white dark:placeholder:text-gray-600"
                 />
                 <button
@@ -167,6 +271,7 @@ export default function SignUpPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm password"
                   required
+                  minLength={8}
                   className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pr-10 pl-10 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-[#4a35ea]/50 focus:ring-1 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-[#141417] dark:text-white dark:placeholder:text-gray-600"
                 />
                 <button
@@ -208,7 +313,8 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={() => handleOAuthSignIn("google")}
-            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <FcGoogle className="h-4 w-4" />
             Google
@@ -217,7 +323,8 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={() => handleOAuthSignIn("github")}
-            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <FaGithub className="h-4 w-4 text-black dark:text-white" />
             GitHub

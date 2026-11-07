@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   FiBriefcase,
   FiArrowRight,
@@ -12,24 +13,57 @@ import {
 } from "react-icons/fi"
 import { FcGoogle } from "react-icons/fc"
 import { FaGithub } from "react-icons/fa"
+import { authClient } from "@/lib/auth-client"
+import { getAuthErrorMessage } from "@/lib/auth-errors"
 
 export default function SignInPage() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     setIsLoading(true)
-    // Add your better-auth signIn logic here:
-    // await authClient.signIn.email({ email, password })
-    setTimeout(() => setIsLoading(false), 1000)
+
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+      })
+
+      if (error) {
+        setError(getAuthErrorMessage(error.code, error.message))
+        return
+      }
+
+      if (data) {
+        router.push("/")
+        router.refresh()
+      }
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleOAuthSignIn = (provider: "google" | "github") => {
-    console.log(`Signing in with ${provider}`)
-    // Add your better-auth OAuth logic here
+  const handleOAuthSignIn = async (provider: "google" | "github") => {
+    setError("")
+    setIsLoading(true)
+
+    try {
+      const { error } = await authClient.signIn.social({ provider })
+
+      if (error) {
+        setError(getAuthErrorMessage(error.code, error.message))
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -52,6 +86,12 @@ export default function SignInPage() {
             Sign in to your HireLoop account
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4 rounded-md bg-red-500/10 p-3 text-center text-sm font-medium text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">

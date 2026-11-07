@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Menu, X, Sun, Moon } from "lucide-react"
+import { Menu, X, Sun, Moon, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
+import { authClient } from "@/lib/auth-client"
 import Image from "next/image"
 
 const navLinks = [
@@ -24,6 +25,9 @@ export function Navbar() {
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }
+
+  const session = authClient.useSession()
+  const user = session.data?.user
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -67,20 +71,45 @@ export function Navbar() {
               </Link>
             ))}
             <span className="h-4 w-px bg-border" />
-            <Link
-              href="/signIn"
-              className="text-primary transition-colors hover:text-primary/80"
-            >
-              Sign In
-            </Link>
+            {/* Signed out: sign in / get started buttons */}
+            {!user && (
+              <>
+                <Link
+                  href="/signIn"
+                  className="text-primary transition-colors hover:text-primary/80"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/signUp"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
+            {/* Signed in: user image + name in flex */}
+            {user && (
+              <div className="flex items-center gap-3">
+                {user.image ? (
+                  <Image
+                    src={user.image}
+                    alt={user.name ?? "User"}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                    loading="lazy"
+                  />
+                ) : (
+                  <User className="h-5 w-5 text-muted-foreground" />
+                )}
+                <span className="max-w-[140px] truncate text-sm font-medium text-foreground">
+                  {user.name}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/signUp"
-              className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Get Started
-            </Link>
             <Button
               size="icon"
               variant="outline"
@@ -145,19 +174,44 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/signIn"
-                onClick={close}
-                className="block text-primary transition-colors hover:text-primary/80"
-              >
-                Sign In
-              </Link>
+              {!user && (
+                <>
+                  <Link
+                    href="/signIn"
+                    onClick={close}
+                    className="block text-primary transition-colors hover:text-primary/80"
+                  >
+                    Sign In
+                  </Link>
+                </>
+              )}
+              {user && (
+                <div className="flex items-center gap-3">
+                  {user.image ? (
+                    <Image
+                      src={user.image}
+                      alt={user.name ?? "User"}
+                      width={32}
+                      height={32}
+                      className="rounded-full"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <User className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span className="max-w-[140px] truncate text-sm font-medium text-foreground">
+                    {user.name}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="pt-4">
-              <Link href="/signUp" className="w-full px-6 py-3">
-                Get Started
-              </Link>
-            </div>
+            {!user && (
+              <div className="pt-4">
+                <Link href="/signUp" className="w-full px-6 py-3">
+                  Get Started
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}
