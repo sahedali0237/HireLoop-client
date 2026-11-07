@@ -12,3 +12,6 @@ export default function Page() {
     </div>
   )
 }
+
+ git config --global user.email "work.sahed.1st@gmail.com"
+  git config --global user.name "sahedali0237"
