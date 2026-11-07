@@ -45,6 +45,7 @@ type RoleValue = (typeof roleOptions)[number]["value"]
 
 export default function SignUpPage() {
   const router = useRouter()
+
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [imageUrl, setImageUrl] = useState("")
@@ -61,21 +62,48 @@ export default function SignUpPage() {
     e.preventDefault()
     setError("")
 
+    // Validate password confirmation
     if (password !== confirmPassword) {
       setError("Passwords do not match.")
+      return
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.")
+      return
+    }
+
+    // Validate required fields
+    if (!name.trim()) {
+      setError("Please enter your full name.")
+      return
+    }
+
+    if (!email.trim()) {
+      setError("Please enter your email address.")
       return
     }
 
     setIsLoading(true)
 
     try {
+      /*
+       * IMPORTANT:
+       * Better Auth's standard email signup accepts:
+       * - name
+       * - email
+       * - password
+       *
+       * Do not send custom fields such as role/image here
+       * unless they have been explicitly configured in Better Auth.
+       */
       const payload = {
         name: name.trim(),
         email: email.trim(),
         password,
-        role,
-        ...(imageUrl.trim() ? { image: imageUrl.trim() } : {}),
       }
+
       const { data, error } = await authClient.signUp.email(payload)
 
       if (error) {
@@ -84,10 +112,25 @@ export default function SignUpPage() {
       }
 
       if (data) {
+        /*
+         * Signup succeeded.
+         *
+         * role and imageUrl are intentionally not sent to
+         * Better Auth yet because they are custom user fields.
+         *
+         * Once your Better Auth user schema is configured for
+         * those fields, they can be saved here.
+         */
+        console.log("Account created successfully:", {
+          role,
+          imageUrl,
+        })
+
         router.push("/")
         router.refresh()
       }
-    } catch {
+    } catch (error) {
+      console.error("Signup error:", error)
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
@@ -99,11 +142,16 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      const { error } = await authClient.signIn.social({ provider })
+      const { error } = await authClient.signIn.social({
+        provider,
+      })
 
       if (error) {
         setError(getAuthErrorMessage(error.code, error.message))
       }
+    } catch (error) {
+      console.error("OAuth error:", error)
+      setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -115,6 +163,7 @@ export default function SignUpPage() {
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 p-4 font-sans dark:bg-[#050505]">
       {/* Background Glow Effects */}
       <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 h-100 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4a35ea]/10 blur-[100px] dark:bg-[#4a35ea]/20 dark:blur-[120px]" />
+
       <div className="pointer-events-none absolute bottom-0 left-0 z-0 h-75 w-100 rounded-full bg-[#10a5c4]/10 blur-[80px] dark:blur-[100px]" />
 
       {/* Sign-Up Card */}
@@ -124,14 +173,17 @@ export default function SignUpPage() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/5">
             <FiBriefcase className="h-6 w-6 text-[#4a35ea]" />
           </div>
+
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
             Create an account
           </h1>
+
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Join HireLoop and find your next role
           </p>
         </div>
 
+        {/* Error Message */}
         {error && (
           <div className="mb-4 rounded-md bg-red-500/10 p-3 text-center text-sm font-medium text-red-600 dark:text-red-400">
             {error}
@@ -143,6 +195,7 @@ export default function SignUpPage() {
           <label className="ml-1 text-xs font-medium text-gray-700 dark:text-gray-300">
             I am joining as
           </label>
+
           <div
             className="grid grid-cols-3 gap-2"
             role="radiogroup"
@@ -151,6 +204,7 @@ export default function SignUpPage() {
             {roleOptions.map((option) => {
               const Icon = option.icon
               const isSelected = role === option.value
+
               return (
                 <button
                   key={option.value}
@@ -167,11 +221,13 @@ export default function SignUpPage() {
                   <Icon
                     className={`h-5 w-5 ${isSelected ? "text-[#4a35ea]" : ""}`}
                   />
+
                   <span className="text-xs font-medium">{option.label}</span>
                 </button>
               )
             })}
           </div>
+
           <p className="ml-1 text-xs text-gray-400 dark:text-gray-500">
             {selectedRole?.description}
           </p>
@@ -179,12 +235,15 @@ export default function SignUpPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Full Name */}
           <div className="space-y-1.5">
             <label className="ml-1 text-xs font-medium text-gray-700 dark:text-gray-300">
               Full Name
             </label>
+
             <div className="relative flex items-center">
               <FiUser className="absolute left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+
               <input
                 type="text"
                 value={name}
@@ -196,12 +255,15 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          {/* Email */}
           <div className="space-y-1.5">
             <label className="ml-1 text-xs font-medium text-gray-700 dark:text-gray-300">
               Email
             </label>
+
             <div className="relative flex items-center">
               <FiMail className="absolute left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+
               <input
                 type="email"
                 value={email}
@@ -213,12 +275,15 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          {/* Profile Image */}
           <div className="space-y-1.5">
             <label className="ml-1 text-xs font-medium text-gray-700 dark:text-gray-300">
               Profile Image URL (Optional)
             </label>
+
             <div className="relative flex items-center">
               <FiImage className="absolute left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+
               <input
                 type="url"
                 value={imageUrl}
@@ -229,13 +294,17 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          {/* Password Fields */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Password */}
             <div className="space-y-1.5">
               <label className="ml-1 text-xs font-medium text-gray-700 dark:text-gray-300">
                 Password
               </label>
+
               <div className="relative flex items-center">
                 <FiLock className="absolute left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
@@ -245,6 +314,7 @@ export default function SignUpPage() {
                   minLength={8}
                   className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pr-10 pl-10 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-[#4a35ea]/50 focus:ring-1 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-[#141417] dark:text-white dark:placeholder:text-gray-600"
                 />
+
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -259,12 +329,15 @@ export default function SignUpPage() {
               </div>
             </div>
 
+            {/* Confirm Password */}
             <div className="space-y-1.5">
               <label className="ml-1 text-xs font-medium text-gray-700 dark:text-gray-300">
                 Confirm Password
               </label>
+
               <div className="relative flex items-center">
                 <FiLock className="absolute left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
@@ -274,6 +347,7 @@ export default function SignUpPage() {
                   minLength={8}
                   className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pr-10 pl-10 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-[#4a35ea]/50 focus:ring-1 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-[#141417] dark:text-white dark:placeholder:text-gray-600"
                 />
+
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -289,12 +363,14 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={isLoading}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#4a35ea] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5b45ff] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isLoading ? "Creating account..." : "Sign Up"}
+
             {!isLoading && <FiArrowRight className="h-4 w-4" />}
           </button>
         </form>
@@ -302,14 +378,17 @@ export default function SignUpPage() {
         {/* Separator */}
         <div className="my-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
+
           <span className="text-[11px] font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
             or register with
           </span>
+
           <div className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
         </div>
 
-        {/* OAuth Integration */}
+        {/* OAuth */}
         <div className="flex w-full gap-3">
+          {/* Google */}
           <button
             type="button"
             onClick={() => handleOAuthSignIn("google")}
@@ -320,6 +399,7 @@ export default function SignUpPage() {
             Google
           </button>
 
+          {/* GitHub */}
           <button
             type="button"
             onClick={() => handleOAuthSignIn("github")}
