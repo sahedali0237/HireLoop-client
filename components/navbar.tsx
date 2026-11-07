@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Menu, X, Sun, Moon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/theme-provider"
 import Image from "next/image"
 
 const navLinks = [
@@ -75,9 +75,12 @@ export function Navbar() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
-            <Button size="sm" className="px-4">
+            <Link
+              href="/signUp"
+              className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
               Get Started
-            </Button>
+            </Link>
             <Button
               size="icon"
               variant="outline"

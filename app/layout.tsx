@@ -29,6 +29,11 @@ export default function RootLayout({
       )}
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme")||"system";var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var r=t==="system"?(d?"dark":"light"):t;var c=document.documentElement.classList;var a=["light","dark"];c.remove.apply(c,a);if(r==="dark"||r==="light"){c.add(r);document.documentElement.style.colorScheme=r}}catch(e){}})()`,
+          }}
+        />
         <title>HireLoop</title>
         <link rel="icon" href="/logos/Icon.png" />
       </head>
