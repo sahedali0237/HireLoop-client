@@ -2,12 +2,12 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Navbar } from "@/components/navbar"
+import { PublicNavbarGate } from "@/components/public-navbar-gate"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
-
 
 export const metadata: Metadata = {
   title: "HireLoop",
@@ -32,12 +32,12 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-screen bg-background text-foreground">
-        
         <ThemeProvider>
-          <Navbar />
+          <PublicNavbarGate>
+            <Navbar />
+          </PublicNavbarGate>
           <main>{children}</main>
         </ThemeProvider>
-
       </body>
     </html>
   )

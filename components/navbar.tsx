@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Menu, X, Sun, Moon, User } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Menu, X, Sun, Moon, User, LogOut } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
@@ -28,6 +29,18 @@ export function Navbar() {
 
   const session = authClient.useSession()
   const user = session.data?.user
+  const router = useRouter()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true)
+    try {
+      await authClient.signOut()
+      router.push("/")
+    } catch {
+      setIsSigningOut(false)
+    }
+  }
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -70,6 +83,15 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {/* Signed in: quick access to the role-based dashboard */}
+            {user && (
+              <Link
+                href="/dashboard"
+                className="transition-colors hover:text-foreground"
+              >
+                Dashboard
+              </Link>
+            )}
             <span className="h-4 w-px bg-border" />
             {/* Signed out: sign in / get started buttons */}
             {!user && (
@@ -106,6 +128,14 @@ export function Navbar() {
                 <span className="max-w-[140px] truncate text-sm font-medium text-foreground">
                   {user.name}
                 </span>
+                <Button
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                  size="sm"
+                  variant="outline"
+                >
+                  <LogOut className="size-4" /> Sign out
+                </Button>
               </div>
             )}
           </div>
@@ -174,6 +204,16 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              {/* Signed in: quick access to the role-based dashboard */}
+              {user && (
+                <Link
+                  href="/dashboard"
+                  onClick={close}
+                  className="block transition-colors hover:text-foreground"
+                >
+                  Dashboard
+                </Link>
+              )}
               {!user && (
                 <>
                   <Link
@@ -202,6 +242,14 @@ export function Navbar() {
                   <span className="max-w-[140px] truncate text-sm font-medium text-foreground">
                     {user.name}
                   </span>
+                  <Button
+                    onClick={handleSignOut}
+                    disabled={isSigningOut}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <LogOut className="size-4" /> Sign out
+                  </Button>
                 </div>
               )}
             </div>

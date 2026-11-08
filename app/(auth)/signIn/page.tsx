@@ -36,7 +36,10 @@ export default function SignInPage() {
       })
 
       if (error) {
-        setError(getAuthErrorMessage(error.code, error.message))
+        setError(
+          getAuthErrorMessage(error.code, error.message) ||
+            "Invalid email or password."
+        )
         return
       }
 
@@ -59,7 +62,10 @@ export default function SignInPage() {
       const { error } = await authClient.signIn.social({ provider })
 
       if (error) {
-        setError(getAuthErrorMessage(error.code, error.message))
+        setError(
+          getAuthErrorMessage(error.code, error.message) ||
+            "Failed to sign in with provider."
+        )
       }
     } finally {
       setIsLoading(false)
@@ -68,7 +74,7 @@ export default function SignInPage() {
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 p-4 font-sans dark:bg-[#050505]">
-      {/* Background Glow Effects (Adapts to light/dark) */}
+      {/* Background Glow Effects */}
       <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 h-100 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4a35ea]/10 blur-[100px] dark:bg-[#4a35ea]/20 dark:blur-[120px]" />
       <div className="pointer-events-none absolute bottom-0 left-0 z-0 h-75 w-100 rounded-full bg-[#10a5c4]/10 blur-[80px] dark:blur-[100px]" />
 
@@ -103,6 +109,7 @@ export default function SignInPage() {
               <FiMail className="absolute left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -128,6 +135,7 @@ export default function SignInPage() {
               <FiLock className="absolute left-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <input
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -168,12 +176,13 @@ export default function SignInPage() {
           <div className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
         </div>
 
-        {/* OAuth Integration (Stacked vertically to match the reference image) */}
+        {/* OAuth Integration */}
         <div className="flex w-full gap-3">
           <button
             type="button"
             onClick={() => handleOAuthSignIn("google")}
-            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <FcGoogle className="h-4 w-4" />
             Google
@@ -182,7 +191,8 @@ export default function SignInPage() {
           <button
             type="button"
             onClick={() => handleOAuthSignIn("github")}
-            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-[#4a35ea]/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <FaGithub className="h-4 w-4 text-black dark:text-white" />
             GitHub

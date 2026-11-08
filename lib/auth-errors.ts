@@ -3,8 +3,7 @@
  */
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   INVALID_EMAIL_OR_PASSWORD: "Invalid email or password. Please try again.",
-  INVALID_PASSWORD:
-    "Password must be at least 8 characters. Please try again.",
+  INVALID_PASSWORD: "Password must be at least 8 characters. Please try again.",
   USER_NOT_FOUND: "No account found with this email.",
   USER_ALREADY_EXISTS:
     "This email is already registered. Try signing in instead.",
@@ -20,7 +19,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 
 export function getAuthErrorMessage(
   code?: string | null,
-  fallback?: string | null,
+  fallback?: string | null
 ): string {
   if (code && AUTH_ERROR_MESSAGES[code]) return AUTH_ERROR_MESSAGES[code]
   if (fallback) return fallback
