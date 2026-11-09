@@ -1,14 +1,3 @@
-/**
- * HireLoop dashboard navigation model.
- *
- * Single source of truth for the user-role union typed from the design system
- * (`Hireloop 2.0` Figma file: sidebar `Role=Seeker|Recruiter|Admin` variants)
- * and the role-based navigation requirements in `Project requirements.md`.
- *
- * Keep this module client-safe (no server imports) so both RSC layouts and
- * client components can consume it.
- */
-
 import {
   LayoutDashboard,
   Briefcase,
@@ -29,11 +18,17 @@ export const ROLES = [
   "admin",
 ] as const satisfies readonly Role[]
 
+/** Base path of each role's dashboard section. */
+export const ROLE_DASHBOARD_ROOT: Record<Role, string> = {
+  seeker: "/dashboard/seeker",
+  recruiter: "/dashboard/recruiter",
+  admin: "/dashboard/admin",
+} as const
+
 export function isRole(value: string): value is Role {
   return (ROLES as readonly string[]).includes(value)
 }
 
-/** Minimal, serialized snapshot of the Better Auth session used across the dashboard. */
 export interface SessionUser {
   readonly id: string
   readonly name: string
@@ -63,12 +58,6 @@ export interface RoleChrome {
   readonly cta?: NavItem
 }
 
-/**
- * Role-based navigation per sidebar variant:
- *  - Seeker:   Dashboard, Jobs, Saved Jobs, Applications, Billing, Settings
- *  - Recruiter: Dashboard, My Company, Manage Jobs, Applications, Settings
- *  - Admin:    Dashboard, Users, Companies, Jobs, Payments, Settings
- */
 export const ROLE_NAVIGATION: Record<Role, readonly NavItem[]> = {
   seeker: [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -148,4 +137,18 @@ export function navItemsForRole(role: Role): readonly NavItem[] {
 
 export function chromeForRole(role: Role): RoleChrome {
   return ROLE_CHROME[role]
+}
+
+/** Redirect target used after login and for the generic /dashboard route. */
+export function dashboardRootForRole(role: Role): string {
+  return ROLE_DASHBOARD_ROOT[role]
+}
+
+/**
+ * True when `pathname` belongs to the given role's dashboard section
+ * (the section root or any nested route beneath it).
+ */
+export function isRoleDashboardRoute(pathname: string, role: Role): boolean {
+  const root = ROLE_DASHBOARD_ROOT[role]
+  return pathname === root || pathname.startsWith(`${root}/`)
 }

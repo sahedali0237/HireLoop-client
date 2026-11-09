@@ -95,13 +95,16 @@ export default function SignUpPage() {
        * - email
        * - password
        *
-       * Do not send custom fields such as role/image here
-       * unless they have been explicitly configured in Better Auth.
+       * The `role` additional field IS configured in `lib/auth.ts`
+       * (user.additionalFields.role with input: true) and is self-assignable
+       * for seeker/recruiter, so we send it here to persist the chosen role.
+       * `imageUrl` is not configured as an additional field, so it is not sent.
        */
       const payload = {
         name: name.trim(),
         email: email.trim(),
         password,
+        role,
       }
 
       const { data, error } = await authClient.signUp.email(payload)

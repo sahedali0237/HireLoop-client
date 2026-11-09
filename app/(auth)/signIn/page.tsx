@@ -15,6 +15,7 @@ import { FcGoogle } from "react-icons/fc"
 import { FaGithub } from "react-icons/fa"
 import { authClient } from "@/lib/auth-client"
 import { getAuthErrorMessage } from "@/lib/auth-errors"
+import { dashboardRootForRole, isRole, type Role } from "@/lib/navigation"
 
 export default function SignInPage() {
   const router = useRouter()
@@ -44,7 +45,11 @@ export default function SignInPage() {
       }
 
       if (data) {
-        router.push("/")
+        const role: Role =
+          typeof data.user.role === "string" && isRole(data.user.role)
+            ? data.user.role
+            : "seeker"
+        router.push(dashboardRootForRole(role))
         router.refresh()
       }
     } catch {

@@ -115,17 +115,17 @@ export function DashboardSidebar({ user }: { user: SessionUser }) {
                       isActive={isActive}
                       tooltip={item.label}
                       className={cn(
-                        "relative h-[34px] gap-2.5 rounded-md px-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors outline-none",
+                        "relative h-8.5 gap-2.5 rounded-md px-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors outline-none",
                         "hover:bg-sidebar-accent hover:text-sidebar-foreground data-[active=true]:bg-muted data-[active=true]:text-foreground"
                       )}
                     >
                       {isActive ? (
                         <span
                           aria-hidden
-                          className="absolute top-1/2 left-[-12px] h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-brand"
+                          className="absolute top-1/2 -left-3 h-4 w-0.75 -translate-y-1/2 rounded-r-full bg-brand"
                         />
                       ) : null}
-                      <item.icon className="!size-4 shrink-0" />
+                      <item.icon className="size-4! shrink-0" />
                       <span className="truncate">{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -176,7 +176,7 @@ export function DashboardSidebar({ user }: { user: SessionUser }) {
             aria-label="Log out"
             className="size-7 shrink-0 rounded-md text-muted-foreground hover:text-destructive"
           >
-            <LogOut className="!size-4" />
+            <LogOut className="size-4!" />
           </Button>
         </div>
       </SidebarFooter>

@@ -49,8 +49,8 @@ export function DashboardHeader({ user }: { user: SessionUser }) {
         className="md:hidden"
       >
         <Image
-          src="/images/logo.png"
-          alt="HireLoop"
+          src="/logos/Icon.png"
+          alt="H"
           width={28}
           height={28}
           className="size-7 rounded-lg"
@@ -67,7 +67,7 @@ export function DashboardHeader({ user }: { user: SessionUser }) {
           type="search"
           placeholder={chrome.searchPlaceholder}
           aria-label="Search"
-          className="h-10 rounded-lg border-border bg-[#0f0f11] pl-9 text-sm placeholder:text-tertiary/70 focus-visible:border-border focus-visible:ring-2 focus-visible:ring-brand/50 max-sm:h-9 max-sm:pl-8"
+          className="h-10 rounded-lg border-border bg-input pl-9 text-sm placeholder:text-tertiary/70 focus-visible:border-border focus-visible:ring-2 focus-visible:ring-brand/50 max-sm:h-9 max-sm:pl-8"
         />
       </div>
 
@@ -79,7 +79,7 @@ export function DashboardHeader({ user }: { user: SessionUser }) {
           aria-label="Notifications"
           className="relative size-9 rounded-lg text-muted-foreground hover:bg-accent"
         >
-          <Bell className="!size-4" />
+          <Bell className="size-4!" />
           <span
             aria-hidden
             className="absolute top-2 right-2 size-1.5 rounded-full bg-brand-soft ring-2 ring-panel"
@@ -91,11 +91,11 @@ export function DashboardHeader({ user }: { user: SessionUser }) {
           aria-label="Quick settings"
           className="hidden size-9 rounded-lg text-muted-foreground hover:bg-accent sm:inline-flex"
         >
-          <Settings className="!size-4" />
+          <Settings className="size-4!" />
         </Button>
         <Separator
           orientation="vertical"
-          className="hidden !h-5 self-center sm:block"
+          className="hidden h-5! self-center sm:block"
         />
 
         <DropdownMenu>
@@ -117,7 +117,7 @@ export function DashboardHeader({ user }: { user: SessionUser }) {
               </AvatarFallback>
             </Avatar>
             <span className="hidden min-w-0 flex-col items-start leading-tight sm:flex">
-              <span className="max-w-[10rem] truncate text-xs font-semibold text-foreground">
+              <span className="max-w-40 truncate text-xs font-semibold text-foreground">
                 {user.name || user.email}
               </span>
               <span className="text-[11px] text-muted-foreground">
@@ -166,7 +166,7 @@ export function DashboardHeader({ user }: { user: SessionUser }) {
               disabled={isSigningOut}
               className="gap-2.5 rounded-md py-2 text-sm text-destructive focus:text-destructive"
             >
-              <LogOut className="!size-4" />
+              <LogOut className="size-4!" />
               {isSigningOut ? "Signing out..." : "Sign out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
