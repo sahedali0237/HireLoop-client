@@ -40,7 +40,7 @@ export function DashboardHeader({ user }: { user: SessionUser }) {
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-panel px-4 md:h-16 md:px-6">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-panel px-4 md:h-16 md:px-6 sticky top-0 z-20">
       {/* Mobile: sidebar toggle + brand */}
       <SidebarTrigger aria-label="Toggle sidebar" className="md:hidden" />
       <Link
