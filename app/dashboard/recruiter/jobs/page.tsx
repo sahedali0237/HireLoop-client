@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -16,12 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Edit2, Plus, Trash2 } from "lucide-react"
 
 import { deleteJob, fetchJobs, type Job, updateJob } from "@/lib/jobs"
@@ -77,6 +80,7 @@ export default function ManageJobsPage() {
   const [error, setError] = useState("")
   const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const router = useRouter()
 
   const refreshJobs = async () => {
     setLoading(true)
@@ -185,13 +189,7 @@ export default function ManageJobsPage() {
         </div>
         <div className="flex items-center gap-3">
           <Button
-            nativeButton={false}
-            render={
-              <a
-                href="/dashboard/recruiter/jobs/new"
-                className="flex items-center justify-center gap-2"
-              />
-            }
+            onClick={() => router.push("/dashboard/recruiter/jobs/new")}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="size-4 shrink-0" />
@@ -217,94 +215,95 @@ export default function ManageJobsPage() {
           jobs.map((job) => (
             <Card
               key={job._id}
-              className="rounded-lg border border-border bg-card p-4 shadow-sm"
+              className="cursor-pointer rounded-lg border border-border bg-card p-4 shadow-sm"
             >
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex flex-wrap items-baseline gap-2">
-                    <h3 className="truncate text-lg font-semibold text-foreground md:max-w-[220px]">
-                      {job.title}
-                    </h3>
-                    <span className="rounded bg-muted/50 px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                      {job.employmentType}
-                    </span>
-                  </div>
-                  <div className="mb-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                    <span className="truncate md:max-w-[150px]">
-                      {job.company}
-                    </span>
-                    <span aria-hidden>•</span>
-                    <span className="truncate md:max-w-[160px]">
-                      {job.location || "Remote"}
-                    </span>
-                    {job.category && (
-                      <>
-                        <span aria-hidden>•</span>
-                        <span className="truncate">{job.category}</span>
-                      </>
+              <Link href={`/dashboard/recruiter/jobs/${job._id}`}>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex flex-wrap items-baseline gap-2">
+                      <h3 className="truncate text-lg font-semibold text-foreground md:max-w-[220px]">
+                        {job.title}
+                      </h3>
+                      <span className="rounded bg-muted/50 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        {job.employmentType}
+                      </span>
+                    </div>
+                    <div className="mb-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                      <span className="truncate md:max-w-[150px]">
+                        {job.company}
+                      </span>
+                      <span aria-hidden>•</span>
+                      <span className="truncate md:max-w-[160px]">
+                        {job.location || "Remote"}
+                      </span>
+                      {job.category && (
+                        <>
+                          <span aria-hidden>•</span>
+                          <span className="truncate">{job.category}</span>
+                        </>
+                      )}
+                    </div>
+                    {(job.salaryMin || job.salaryMax) && (
+                      <p className="mb-1 text-sm text-foreground">
+                        {job.salaryMin && job.salaryMax
+                          ? `$${job.salaryMin} - $${job.salaryMax}`
+                          : job.salaryMin
+                            ? `$${job.salaryMin}+`
+                            : `up to $${job.salaryMax}`}
+                      </p>
+                    )}
+                    {job.applicationEmail && (
+                      <p className="mb-1 text-sm text-muted-foreground">
+                        Apply: {job.applicationEmail}
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Posted {formatDate(job.createdAt)}
+                    </p>
+                    {job.description && (
+                      <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                        {job.description}
+                      </p>
                     )}
                   </div>
-                  {(job.salaryMin || job.salaryMax) && (
-                    <p className="mb-1 text-sm text-foreground">
-                      {job.salaryMin && job.salaryMax
-                        ? `$${job.salaryMin} - $${job.salaryMax}`
-                        : job.salaryMin
-                          ? `$${job.salaryMin}+`
-                          : `up to $${job.salaryMax}`}
-                    </p>
-                  )}
-                  {job.applicationEmail && (
-                    <p className="mb-1 text-sm text-muted-foreground">
-                      Apply: {job.applicationEmail}
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Posted {formatDate(job.createdAt)}
-                  </p>
-                  {job.description && (
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                      {job.description}
-                    </p>
-                  )}
-                </div>
 
-                <div className="flex shrink-0 gap-2">
-                  <Sheet
-                    open={editingJob !== null}
-                    onOpenChange={(open) => {
-                      if (!open) setEditingJob(null)
-                    }}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={deletingId === job._id}
-                      onClick={() => {
-                        form.reset({
-                          title: job.title,
-                          company: job.company,
-                          description: job.description,
-                          location: job.location ?? "",
-                          employmentType: job.employmentType,
-                          category: job.category ?? "",
-                          salaryMin: job.salaryMin ?? "",
-                          salaryMax: job.salaryMax ?? "",
-                          applicationEmail: job.applicationEmail ?? "",
-                        })
-                        setEditingJob(job)
+                  <div className="flex shrink-0 gap-2">
+                    <Dialog
+                      open={editingJob !== null}
+                      onOpenChange={(open) => {
+                        if (!open) setEditingJob(null)
                       }}
                     >
-                      <Edit2 className="mr-1 size-3.5 shrink-0" />
-                      Edit
-                    </Button>
-                    <SheetContent side="right" className="w-[420px]">
-                      <SheetHeader>
-                        <SheetTitle>Edit Job</SheetTitle>
-                        <SheetDescription>
-                          Update the job posting details below.
-                        </SheetDescription>
-                      </SheetHeader>
-                      <CardContent className="space-y-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={deletingId === job._id}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          form.reset({
+                            title: job.title,
+                            company: job.company,
+                            description: job.description,
+                            location: job.location ?? "",
+                            employmentType: job.employmentType,
+                            category: job.category ?? "",
+                            salaryMin: job.salaryMin ?? "",
+                            salaryMax: job.salaryMax ?? "",
+                            applicationEmail: job.applicationEmail ?? "",
+                          })
+                          setEditingJob(job)
+                        }}
+                      >
+                        <Edit2 className="mr-1 size-3.5 shrink-0" />
+                        Edit
+                      </Button>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Edit Job</DialogTitle>
+                          <DialogDescription>
+                            Update the job posting details below.
+                          </DialogDescription>
+                        </DialogHeader>
                         <form
                           onSubmit={form.handleSubmit(onSubmit)}
                           className="space-y-4"
@@ -455,7 +454,7 @@ export default function ManageJobsPage() {
                               </div>
                             </div>
                           </div>
-                          <CardFooter className="justify-end pt-4">
+                          <DialogFooter className="justify-end pt-4">
                             <Button
                               type="button"
                               variant="outline"
@@ -473,28 +472,31 @@ export default function ManageJobsPage() {
                             >
                               Save Changes
                             </Button>
-                          </CardFooter>
+                          </DialogFooter>
                         </form>
-                      </CardContent>
-                    </SheetContent>
-                  </Sheet>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={deletingId === job._id}
-                    onClick={() => handleDelete(job._id)}
-                  >
-                    {deletingId === job._id ? (
-                      "Deleting..."
-                    ) : (
-                      <>
-                        <Trash2 className="mr-1 size-3.5 shrink-0" />
-                        Delete
-                      </>
-                    )}
-                  </Button>
+                      </DialogContent>
+                    </Dialog>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deletingId === job._id}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(job._id)
+                      }}
+                    >
+                      {deletingId === job._id ? (
+                        "Deleting..."
+                      ) : (
+                        <>
+                          <Trash2 className="mr-1 size-3.5 shrink-0" />
+                          Delete
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </Card>
           ))
         )}

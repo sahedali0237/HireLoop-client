@@ -4,9 +4,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
-import { LogOut } from "lucide-react"
+import { LogOut, Moon, Sun } from "lucide-react"
 
 import { authClient } from "@/lib/auth-client"
+import { useTheme } from "@/components/theme-provider"
 import {
   chromeForRole,
   navItemsForRole,
@@ -36,6 +37,11 @@ export function DashboardSidebar({ user }: { user: SessionUser }) {
 
   const chrome = chromeForRole(user.role)
   const items = navItemsForRole(user.role)
+
+  const { setTheme, resolvedTheme } = useTheme()
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+  }
 
   const handleLogOut = async () => {
     setIsSigningOut(true)
@@ -152,6 +158,30 @@ export function DashboardSidebar({ user }: { user: SessionUser }) {
             {chrome.cta.label}
           </Button>
         ) : null}
+
+        {/* Theme toggle */}
+        <SidebarGroup className="p-0">
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Switch theme"
+                  onClick={toggleTheme}
+                  className="h-8"
+                >
+                  {resolvedTheme === "dark" ? (
+                    <Sun className="size-4 shrink-0" />
+                  ) : (
+                    <Moon className="size-4 shrink-0" />
+                  )}
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Theme
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         <div className="flex items-center gap-2.5 rounded-lg bg-card p-2 group-data-[collapsible=icon]:hidden">
           <Avatar className="size-8 shrink-0">
