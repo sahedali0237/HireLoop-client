@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar"
 import { PublicNavbarGate } from "@/components/public-navbar-gate"
 import { cn } from "@/lib/utils"
 import "./globals.css"
+import { ToastContainer } from "react-toastify"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
@@ -37,6 +38,7 @@ export default function RootLayout({
             <Navbar />
           </PublicNavbarGate>
           <main>{children}</main>
+          <ToastContainer />
         </ThemeProvider>
       </body>
     </html>

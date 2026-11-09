@@ -25,6 +25,7 @@ import {
 import { Briefcase, Building2, DollarSign, Mail, MapPin } from "lucide-react"
 
 import { createJob } from "@/lib/jobs"
+import { toast } from "react-toastify"
 
 const jobSchema = z.object({
   title: z.string().min(2, "Job title must be at least 2 characters").max(100),
@@ -96,11 +97,13 @@ export default function AddJobPage() {
     setError("")
     try {
       await createJob(values)
+      toast.success("Job created successfully")
       setSubmitted(true)
     } catch (err) {
-      setError(
+      const message =
         err instanceof Error ? err.message : "Failed to create job. Try again."
-      )
+      setError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -298,7 +301,8 @@ export default function AddJobPage() {
                   </label>
                   <Input
                     id="salaryMin"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
                     {...form.register("salaryMin")}
                   />
@@ -314,7 +318,8 @@ export default function AddJobPage() {
                   </label>
                   <Input
                     id="salaryMax"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
                     {...form.register("salaryMax")}
                   />

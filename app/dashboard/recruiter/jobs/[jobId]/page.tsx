@@ -2,9 +2,6 @@
 
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,25 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Edit2, Trash2, ArrowLeft, Building2 } from "lucide-react"
 
 import { deleteJob, fetchJob, type Job, updateJob } from "@/lib/jobs"
+import {
+  EditJobDialog,
+  type JobEditFormValues,
+} from "@/components/recruiter/EditJobDialog"
+import { toast } from "react-toastify"
 
 function formatDate(value?: string) {
   if (!value) return "-"
@@ -42,43 +28,6 @@ function formatDate(value?: string) {
     day: "numeric",
   })
 }
-
-const numberOrEmpty = z
-  .string()
-  .refine(
-    (value) => value === "" || /^\d+$/.test(value),
-    "Enter a valid number"
-  )
-  .optional()
-
-const jobEditSchema = z.object({
-  title: z.string().min(2, "Job title must be at least 2 characters").max(100),
-  company: z.string().min(1, "Company is required"),
-  description: z
-    .string()
-    .min(20, "Please provide a more detailed job description"),
-  location: z.string().optional(),
-  employmentType: z.string().min(1, "Employment type is required"),
-  category: z.string().optional(),
-  salaryMin: numberOrEmpty,
-  salaryMax: numberOrEmpty,
-  // Allow an empty string so jobs without an email can still be saved
-  applicationEmail: z
-    .string()
-    .email("Enter a valid email address")
-    .or(z.literal(""))
-    .optional(),
-})
-
-type JobEditFormValues = z.infer<typeof jobEditSchema>
-
-const EMPLOYMENT_TYPES = [
-  { value: "full-time", label: "Full-time" },
-  { value: "part-time", label: "Part-time" },
-  { value: "contract", label: "Contract" },
-  { value: "internship", label: "Internship" },
-  { value: "freelance", label: "Freelance" },
-]
 
 export default function JobDetailPage({
   params,
@@ -96,29 +45,15 @@ export default function JobDetailPage({
     hasMissingJobId ? "Job id is missing." : ""
   ) // failed to load the job
   const [actionError, setActionError] = useState("") // failed to delete
-  const [saveError, setSaveError] = useState("") // failed to save (shown in dialog)
   const [deleting, setDeleting] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  // True while this page's job has been deleted. Prevents the fetch effect
+  // below from re-fetching (and 404-ing on) a now-deleted job id.
+  const [deleted, setDeleted] = useState(false)
   const router = useRouter()
 
-  const form = useForm<JobEditFormValues>({
-    resolver: zodResolver(jobEditSchema),
-    defaultValues: {
-      title: "",
-      company: "",
-      description: "",
-      location: "",
-      employmentType: "full-time",
-      category: "",
-      salaryMin: "",
-      salaryMax: "",
-      applicationEmail: "",
-    },
-  })
-
   useEffect(() => {
-    if (hasMissingJobId) return
+    if (hasMissingJobId || deleted) return
 
     let ignore = false
     ;(async () => {
@@ -140,60 +75,43 @@ export default function JobDetailPage({
     return () => {
       ignore = true
     }
-  }, [hasMissingJobId, jobId])
+  }, [hasMissingJobId, jobId, deleted])
 
-  function openEditDialog() {
-    if (!job) return
-    form.reset({
-      title: job.title,
-      company: job.company,
-      description: job.description,
-      location: job.location ?? "",
-      employmentType: job.employmentType,
-      category: job.category ?? "",
-      salaryMin: job.salaryMin ?? "",
-      salaryMax: job.salaryMax ?? "",
-      applicationEmail: job.applicationEmail ?? "",
-    })
-    setSaveError("")
-    setEditOpen(true)
-  }
-
-  function closeEditDialog() {
-    if (saving) return
-    setEditOpen(false)
-    setSaveError("")
-  }
-
-  async function onSubmit(values: JobEditFormValues) {
-    setSaving(true)
-    setSaveError("")
+  async function handleSave(values: JobEditFormValues) {
     try {
       // Commit the changes to the server (PATCH /jobs/:id)
       await updateJob(jobId, values)
       // Reload the saved job so the page shows exactly what the server has
       const updated = await fetchJob(jobId)
       setJob(updated)
-      setEditOpen(false)
+      toast.success("Job updated successfully")
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Failed to update job.")
-    } finally {
-      setSaving(false)
+      const message =
+        err instanceof Error ? err.message : "Failed to update job."
+      toast.error(message)
     }
   }
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this job?")) return
+    // Mark the job as deleted so the fetch effect above never refetches this
+    // (now-deleted) id, then navigate away FIRST. Use replace so the Back
+    // button cannot return to a detail page for a deleted job (which would 404
+    // and show "Job not found").
+    setDeleted(true)
     setDeleting(true)
     setActionError("")
     try {
       await deleteJob(jobId)
-      router.push("/dashboard/recruiter/jobs")
+      toast.success("Job deleted successfully")
+      router.replace("/dashboard/recruiter/jobs")
     } catch (err) {
+      setDeleted(false)
       setDeleting(false)
-      setActionError(
+      const message =
         err instanceof Error ? err.message : "Failed to delete job."
-      )
+      setActionError(message)
+      toast.error(message)
     }
   }
 
@@ -357,7 +275,11 @@ export default function JobDetailPage({
             <span>{job.company}</span>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" type="button" onClick={openEditDialog}>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setEditOpen(true)}
+            >
               <Edit2 className="mr-1 size-3.5 shrink-0" />
               Edit
             </Button>
@@ -380,219 +302,12 @@ export default function JobDetailPage({
         </CardFooter>
       </Card>
 
-      <Dialog
+      <EditJobDialog
         open={editOpen}
-        onOpenChange={(open) => {
-          if (!open) closeEditDialog()
-        }}
-      >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Job</DialogTitle>
-            <DialogDescription>
-              Update the job posting details below.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {saveError && (
-              <div className="rounded-md bg-red-500/10 p-3 text-center text-sm font-medium text-red-600 dark:text-red-400">
-                {saveError}
-              </div>
-            )}
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="title"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Job Title
-                </label>
-                <Input
-                  id="title"
-                  placeholder="e.g. Senior Frontend Engineer"
-                  {...form.register("title")}
-                />
-                {form.formState.errors.title && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.title.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="company"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Company
-                </label>
-                <Input id="company" {...form.register("company")} />
-                {form.formState.errors.company && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.company.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="location"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Location
-                </label>
-                <Input
-                  id="location"
-                  placeholder="e.g. New York, NY or Remote"
-                  {...form.register("location")}
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">
-                  Employment Type
-                </label>
-                <Controller
-                  control={form.control}
-                  name="employmentType"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => field.onChange(value ?? "")}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {EMPLOYMENT_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {form.formState.errors.employmentType && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.employmentType.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="description"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  rows={4}
-                  {...form.register("description")}
-                  className="w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
-                />
-                {form.formState.errors.description && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.description.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="category"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Category
-                </label>
-                <Input
-                  id="category"
-                  placeholder="e.g. Engineering"
-                  {...form.register("category")}
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="applicationEmail"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Application Email
-                </label>
-                <Input
-                  id="applicationEmail"
-                  type="email"
-                  placeholder="jobs@example.com"
-                  {...form.register("applicationEmail")}
-                />
-                {form.formState.errors.applicationEmail && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.applicationEmail.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="salaryMin"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Salary Min
-                </label>
-                <Input
-                  id="salaryMin"
-                  type="number"
-                  placeholder="0"
-                  {...form.register("salaryMin")}
-                />
-                {form.formState.errors.salaryMin && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.salaryMin.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="salaryMax"
-                  className="mb-2 block text-sm font-medium text-foreground"
-                >
-                  Salary Max
-                </label>
-                <Input
-                  id="salaryMax"
-                  type="number"
-                  placeholder="0"
-                  {...form.register("salaryMax")}
-                />
-                {form.formState.errors.salaryMax && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.salaryMax.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <DialogFooter className="justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={closeEditDialog}
-                disabled={saving}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? "Saving…" : "Save Changes"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setEditOpen}
+        job={job}
+        onSave={handleSave}
+      />
     </div>
   )
 }
