@@ -1,5 +1,11 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import {
+  Geist,
+  Geist_Mono,
+  Inter,
+  Instrument_Sans,
+  JetBrains_Mono,
+} from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Navbar } from "@/components/navbar"
 import { PublicNavbarGate } from "@/components/public-navbar-gate"
@@ -9,6 +15,16 @@ import { ToastContainer } from "react-toastify"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
+// HireLoop 2.0 public design fonts (Figma: Job Hunting Platform - PH)
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const instrumentSans = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-instrument-sans",
+})
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+})
 
 export const metadata: Metadata = {
   title: "HireLoop",
@@ -29,6 +45,9 @@ export default function RootLayout({
         "antialiased",
         geist.variable,
         fontMono.variable,
+        inter.variable,
+        instrumentSans.variable,
+        jetbrainsMono.variable,
         "font-sans"
       )}
     >

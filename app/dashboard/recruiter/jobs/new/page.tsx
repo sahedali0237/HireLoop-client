@@ -22,7 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Briefcase, Building2, DollarSign, Mail, MapPin } from "lucide-react"
+import {
+  Briefcase,
+  Building2,
+  DollarSign,
+  List,
+  ListTodo,
+  Mail,
+  MapPin,
+} from "lucide-react"
 
 import { createJob } from "@/lib/jobs"
 import { toast } from "react-toastify"
@@ -57,6 +65,10 @@ const jobSchema = z.object({
     )
     .optional(),
   applicationEmail: z.string().email("Enter a valid email address").optional(),
+  /** One requirement per line. */
+  requirements: z.string().optional(),
+  /** One responsibility per line. */
+  responsibilities: z.string().optional(),
 })
 
 type JobFormValues = z.infer<typeof jobSchema>
@@ -89,6 +101,8 @@ export default function AddJobPage() {
       salaryMin: "",
       salaryMax: "",
       applicationEmail: "",
+      requirements: "",
+      responsibilities: "",
     },
   })
 
@@ -96,7 +110,16 @@ export default function AddJobPage() {
     setIsSubmitting(true)
     setError("")
     try {
-      await createJob(values)
+      const payload = {
+        ...values,
+        requirements: values.requirements
+          ? values.requirements.split("\n").filter(Boolean)
+          : undefined,
+        responsibilities: values.responsibilities
+          ? values.responsibilities.split("\n").filter(Boolean)
+          : undefined,
+      }
+      await createJob(payload)
       toast.success("Job created successfully")
       setSubmitted(true)
     } catch (err) {
@@ -278,6 +301,60 @@ export default function AddJobPage() {
               {form.formState.errors.description && (
                 <p className="mt-1 text-xs text-destructive">
                   {form.formState.errors.description.message}
+                </p>
+              )}
+            </div>
+
+            <div className="col-span-full">
+              <div className="mb-2 flex items-center gap-2">
+                <List className="size-4 text-muted-foreground" />
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="requirements"
+                >
+                  Requirements
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  One requirement per line
+                </p>
+              </div>
+              <textarea
+                id="requirements"
+                rows={4}
+                placeholder="e.g. Bachelor's degree in Marketing\n2+ years of experience in digital marketing"
+                {...form.register("requirements")}
+                className="h-32 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+              />
+              {form.formState.errors.requirements && (
+                <p className="mt-1 text-xs text-destructive">
+                  {form.formState.errors.requirements.message}
+                </p>
+              )}
+            </div>
+
+            <div className="col-span-full">
+              <div className="mb-2 flex items-center gap-2">
+                <ListTodo className="size-4 text-muted-foreground" />
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="responsibilities"
+                >
+                  Responsibilities
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  One responsibility per line
+                </p>
+              </div>
+              <textarea
+                id="responsibilities"
+                rows={4}
+                placeholder="e.g. Develop and execute digital marketing campaigns\nManage paid advertising budgets"
+                {...form.register("responsibilities")}
+                className="h-32 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+              />
+              {form.formState.errors.responsibilities && (
+                <p className="mt-1 text-xs text-destructive">
+                  {form.formState.errors.responsibilities.message}
                 </p>
               )}
             </div>

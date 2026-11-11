@@ -31,7 +31,17 @@ export default function RecruiterDashboard() {
             <Briefcase className="size-4 shrink-0" />
             Post a Job
           </Button>
-          <Button variant="outline" className="w-auto">
+          <Button
+            nativeButton={false}
+            variant="outline"
+            className="w-auto"
+            render={
+              <Link
+                href="/dashboard/recruiter/jobs"
+                className="flex items-center justify-center gap-2"
+              />
+            }
+          >
             Manage Jobs
           </Button>
         </div>

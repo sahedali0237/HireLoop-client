@@ -104,8 +104,8 @@ export function EditJobDialog({
       location: job.location ?? "",
       employmentType: job.employmentType,
       category: job.category ?? "",
-      salaryMin: job.salaryMin ?? "",
-      salaryMax: job.salaryMax ?? "",
+      salaryMin: String(job.salaryMin ?? ""),
+      salaryMax: String(job.salaryMax ?? ""),
       applicationEmail: job.applicationEmail ?? "",
     })
   }, [open, job, form])
